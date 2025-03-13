@@ -26,22 +26,56 @@ router = APIRouter()
 
 @router.get("/collateralOverview/{location_id}")
 async def read_collateral_overview(location_id: int):
-    # ... (existing code) ...
+    """
+    Retrieves the collateral overview for a specific location.
+    """
+    result, status_code = get_collateral_overview(location_id)
+    if status_code == 200:
+        try:
+            collateral_overview = CollateralOverview(**result)
+            return jsonable_encoder(collateral_overview)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    raise HTTPException(status_code=status_code, detail=result)
 
 
 @router.patch("/collateralOverview/{location_id}")
 async def update_collateral_overview(location_id: int, collateral_overview: CollateralOverview):
-    # ... (existing code) ...
+    """
+    Updates the collateral overview for a specific location.
+    """
+    data = collateral_overview.dict()
+    result, status_code = patch_collateral_overview(location_id, data)
+    if status_code == 200:
+        return result
+    raise HTTPException(status_code=status_code, detail=result)
 
 
 @router.get("/fields")
 async def read_collateral_fields():
-    # ... (existing code) ...
+    """
+    Retrieves the field definitions for collateral data.
+    """
+    result, status_code = get_collateral_fields()
+    if status_code == 200:
+        return result
+    raise HTTPException(status_code=status_code, detail=result)
 
 
 @router.get("/openapi.yaml", response_class=fastapi.responses.PlainTextResponse)
 async def get_openapi_spec():
-    # ... (existing code) ...
+    """
+    Generates the OpenAPI specification for the collateral API.
+    """
+    from fastapi.openapi.utils import get_openapi
+    openapi_schema = get_openapi(
+        title="Collateral Overview API",
+        version="1.0.0",
+        routes=app.routes,
+    )
+    yaml_data = yaml.dump(openapi_schema)
+    return yaml_data
+
 
 # Mock data generation
 def generate_mock_data(model):
@@ -104,7 +138,7 @@ async def create_service_request(processAsWarnings: Optional[bool] = True):
             "responseCode": 201,
             "responseID": "mock-uuid",  # Mock UUID
             "success": True,
-            "warnings":,
+            "warnings": [],
         },
         "data": {
             "serviceRequestID": random.randint(100000, 200000),
